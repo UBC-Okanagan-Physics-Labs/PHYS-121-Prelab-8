@@ -748,23 +748,23 @@ def Sine(xData, yData, yErrors = [], xlabel = 'x-axis', ylabel = 'y-axis', xUnit
         import uncertainties
 
         # Define the linear function used for the fit.
-        def SineFcn(x, coeff, fr, phase):
-            y = coeff*np.sin(2*np.pi*fr*x + phase)
+        def SineFcn(x, coeff, period, phase):
+            y = coeff*np.sin(2*np.pi/period*x + phase)
             return y
         
         # Find the minimum y value.  Will scale yData by the minimum value of y so that the nonlinear fit doesn't fail or require good initial guesses at the parameter values.
         ymax = np.max(yData)
-        freqEst = 33.3333/60 # 33 1/3 revs/minute converted to Hz.
+        T_Est = 1.41 #  period in s.
 
-        start = (ymax, freqEst, 0)
+        start = (ymax, T_Est, 0)
 
 
         # If the yErrors list is empty, do an unweighted fit.  Otherwise, do a weighted fit.
         print('')
         if xUnits == '':
-            display(Markdown('$y = A\,\sin(2\pi f x + \phi)$'))
+            display(Markdown('$y = A\,\sin(2\pi/T x + \phi)$'))
         else:
-            display(Markdown('$y = A\,\sin(2\pi f x + \phi)$'))
+            display(Markdown('$y = A\,\sin(2\pi/T x + \phi)$'))
         if len(yErrors) == 0: 
             a_fit, cov = curve_fit(SineFcn, xData, yData, p0 = start)
             display(Markdown('This is an **UNWEIGHTED** fit.'))
@@ -774,36 +774,36 @@ def Sine(xData, yData, yErrors = [], xlabel = 'x-axis', ylabel = 'y-axis', xUnit
 
         coeff = a_fit[0]
         errCoeff = np.sqrt(np.diag(cov))[0]
-        fr = a_fit[1]
-        errfr = np.sqrt(np.diag(cov))[1]
+        period = a_fit[1]
+        errPeriod = np.sqrt(np.diag(cov))[1]
         phase = a_fit[2]
         errPhase = np.sqrt(np.diag(cov))[2]
 
         # Use the 'uncertainties' package to format the best-fit parameters and the corresponding uncertainties.
         A = uncertainties.ufloat(coeff, errCoeff)
-        f = uncertainties.ufloat(fr, errfr)
+        T = uncertainties.ufloat(period, errPeriod)
         phi = uncertainties.ufloat(phase, errPhase)
 
         # Make a formatted table that reports the best-fit parameters and their uncertainties        
         import pandas as pd
         if xUnits != '' and yUnits != '':
 #            my_dict = {'coefficient' :{'':'$A =$', 'Value': '{:0.2ug}'.format(A), 'Units': yUnits + '/' + xUnits + eval(r'"\u00b' + str(Power) + '"')},
-#                       'frequency':{'':'$f =$', 'Value': '{:0.2ug}'.format(f), 'Units': ''},
+#                       'frequency':{'':'$T =$', 'Value': '{:0.2ug}'.format(T), 'Units': ''},
 #                       'phase':{'':'$\phi =$', 'Value': '{:0.2ug}'.format(phi), 'Units': yUnits}}
             my_dict = {'coefficient' :{'':'$A =$', 'Value': '{:0.2ug}'.format(A), 'Units': yUnits},
-                       'frequency':{'':'$f =$', 'Value': '{:0.2ug}'.format(f), 'Units': ''},
+                       'frequency':{'':'$T =$', 'Value': '{:0.2ug}'.format(T), 'Units': ''},
                        'phase':{'':'$\phi =$', 'Value': '{:0.2ug}'.format(phi), 'Units': yUnits}}
         elif xUnits != '' and yUnits == '':
             my_dict = {'coefficient' :{'':'$A =$', 'Value': '{:0.2ug}'.format(A), 'Units': yUnits},
-                       'frequency':{'':'$f =$', 'Value': '{:0.2ug}'.format(f), 'Units': ''},
+                       'frequency':{'':'$T =$', 'Value': '{:0.2ug}'.format(T), 'Units': ''},
                        'phase':{'':'$\phi =$', 'Value': '{:0.2ug}'.format(phi), 'Units': yUnits}}           
         elif xUnits == '' and yUnits != '':
             my_dict = {'coefficient' :{'':'$A =$', 'Value': '{:0.2ug}'.format(A), 'Units': yUnits},
-                       'frequency':{'':'$f =$', 'Value': '{:0.2ug}'.format(f), 'Units': ''},
+                       'frequency':{'':'$T =$', 'Value': '{:0.2ug}'.format(T), 'Units': ''},
                        'phase':{'':'$\phi =$', 'Value': '{:0.2ug}'.format(phi), 'Units': yUnits}} 
         else:
             my_dict = {'coefficient' :{'':'$A =$', 'Value': '{:0.2ug}'.format(A)},
-                       'frequency':{'':'$f =$', 'Value': '{:0.2ug}'.format(f)},
+                       'frequency':{'':'$T =$', 'Value': '{:0.2ug}'.format(T)},
                        'phase':{'':'$\phi =$', 'Value': '{:0.2ug}'.format(phi)}} 
 
         # Display the table
@@ -828,11 +828,11 @@ def Sine(xData, yData, yErrors = [], xlabel = 'x-axis', ylabel = 'y-axis', xUnit
 
         # Plot the best-fit line...
         xx = np.arange(xmin, xmax, (xmax-xmin)/5000)
-        plt.plot(xx, coeff*np.sin(2*np.pi*fr*xx + phase), 'k-')
+        plt.plot(xx, coeff*np.sin(2*np.pi/period*xx + phase), 'k-')
 
         # Show the final plot.
         plt.show()
-    return coeff, fr, phase, errCoeff, errfr, errPhase, fig
+    return coeff, period, phase, errCoeff, errPeriod, errPhase, fig
 
 
 ###############################################################################
