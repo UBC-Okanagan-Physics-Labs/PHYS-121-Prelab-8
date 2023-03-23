@@ -788,22 +788,22 @@ def Sine(xData, yData, yErrors = [], xlabel = 'x-axis', ylabel = 'y-axis', xUnit
         import pandas as pd
         if xUnits != '' and yUnits != '':
 #            my_dict = {'coefficient' :{'':'$A =$', 'Value': '{:0.2ug}'.format(A), 'Units': yUnits + '/' + xUnits + eval(r'"\u00b' + str(Power) + '"')},
-#                       'frequency':{'':'$T =$', 'Value': '{:0.2ug}'.format(T), 'Units': ''},
-#                       'phase':{'':'$\phi =$', 'Value': '{:0.2ug}'.format(phi), 'Units': yUnits}}
+#                       'period':{'':'$T =$', 'Value': '{:0.2ug}'.format(T), 'Units': xUnits},
+#                       'phase':{'':'$\phi =$', 'Value': '{:0.2ug}'.format(phi), 'Units': 'rad'}}
             my_dict = {'coefficient' :{'':'$A =$', 'Value': '{:0.2ug}'.format(A), 'Units': yUnits},
-                       'frequency':{'':'$T =$', 'Value': '{:0.2ug}'.format(T), 'Units': ''},
-                       'phase':{'':'$\phi =$', 'Value': '{:0.2ug}'.format(phi), 'Units': yUnits}}
+                       'period':{'':'$T =$', 'Value': '{:0.2ug}'.format(T), 'Units': xUnits},
+                       'phase':{'':'$\phi =$', 'Value': '{:0.2ug}'.format(phi), 'Units': 'rad'}}
         elif xUnits != '' and yUnits == '':
             my_dict = {'coefficient' :{'':'$A =$', 'Value': '{:0.2ug}'.format(A), 'Units': yUnits},
-                       'frequency':{'':'$T =$', 'Value': '{:0.2ug}'.format(T), 'Units': ''},
-                       'phase':{'':'$\phi =$', 'Value': '{:0.2ug}'.format(phi), 'Units': yUnits}}           
+                       'period':{'':'$T =$', 'Value': '{:0.2ug}'.format(T), 'Units': xUnits},
+                       'phase':{'':'$\phi =$', 'Value': '{:0.2ug}'.format(phi), 'Units': 'rad'}}           
         elif xUnits == '' and yUnits != '':
             my_dict = {'coefficient' :{'':'$A =$', 'Value': '{:0.2ug}'.format(A), 'Units': yUnits},
-                       'frequency':{'':'$T =$', 'Value': '{:0.2ug}'.format(T), 'Units': ''},
-                       'phase':{'':'$\phi =$', 'Value': '{:0.2ug}'.format(phi), 'Units': yUnits}} 
+                       'period':{'':'$T =$', 'Value': '{:0.2ug}'.format(T), 'Units': xUnits},
+                       'phase':{'':'$\phi =$', 'Value': '{:0.2ug}'.format(phi), 'Units': 'rad'}} 
         else:
             my_dict = {'coefficient' :{'':'$A =$', 'Value': '{:0.2ug}'.format(A)},
-                       'frequency':{'':'$T =$', 'Value': '{:0.2ug}'.format(T)},
+                       'period':{'':'$T =$', 'Value': '{:0.2ug}'.format(T)},
                        'phase':{'':'$\phi =$', 'Value': '{:0.2ug}'.format(phi)}} 
 
         # Display the table
