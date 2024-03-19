@@ -16,6 +16,9 @@ from matplotlib.pyplot import cm # used to generate a sequence of colours for pl
 from scipy.optimize import curve_fit
 from IPython.display import HTML as html_print
 from IPython.display import display, Markdown, Latex
+from datetime import datetime, timedelta
+import sympy as sym
+import inspect
 
 ###############################################################################
 # Import a set of modules                                                     #
@@ -99,7 +102,7 @@ def Installer():
         spec = importlib.util.find_spec(name)
         if spec is None:
             display(html_print(cstr('Installing some packages ...\n', color = 'red')))
-            display(html_print(cstr("After the installation completes, please restart the kernel and then run the 'PHYS121.Installer()' function again before proceeding.\n", color = 'red')))
+            display(html_print(cstr("After the installation completes, please run the 'PHYS121.Installer()' function again before proceeding.\n", color = 'red')))
             subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--user', name])
             cnt += 1
 
@@ -108,7 +111,7 @@ def Installer():
         importlib.import_module('otter')
     except ImportError:
         display(html_print(cstr('Installing some packages ...\n', color = 'red')))
-        display(html_print(cstr("After the installation completes, please restart the kernel and then run the 'PHYS121.Installer()' function again before proceeding.\n", color = 'red')))
+        display(html_print(cstr("After the installation completes, please run the 'PHYS121.Installer()' function again before proceeding.\n", color = 'red')))
         import pip
         pip.main(['install', 'otter-grader'])
         cnt += 1
@@ -118,7 +121,7 @@ def Installer():
     if cnt == 0:
         display(html_print(cstr('All packages already installed. Please proceed.', color = 'black')))
     else:
-        display(html_print(cstr("\n Some packages were installed.  Please restart the kernel and then run the 'PHYS121.Installer()' function again before proceeding.", color = 'red')))
+        display(html_print(cstr("\n Some packages were installed.  Please run the 'PHYS121.Installer()' function again before proceeding.", color = 'red')))
         
 
 ###############################################################################
@@ -1449,7 +1452,13 @@ def printDigits():
     numDigits = random.randint(25, 35)
     
     # Now we generate a list of random integers numDigits long
-    digits = list(np.random.randint(1, 9, numDigits))
+    test = False
+    while test == False:
+        digits = list(np.random.randint(1, 10, numDigits))
+        seen = set()
+        duplicates = list(set(x for x in digits if x in seen or seen.add(x)))
+        if 9 in digits or (3 in digits and 6 in digits) or 3 in duplicates or 6 in duplicates:
+            test = True
     
     # Next, we take their product
     product = 1
@@ -1500,3 +1509,129 @@ def extension(file_names_in, new_ext):
 def get_hash(num):
     """Helper function for assessing correctness"""
     return hashlib.md5(str(num).encode()).hexdigest()
+
+###############################################################################
+# Hash student answers so that the Otter-Grader grader.check() output         #
+# doesn't reveal the correct answer                                           #
+# - modified 20240221                                                         #
+###############################################################################       
+def hasher(num):
+    if num == 'a':
+        hashcode = '0cc175b9c0f1b6a831c399e269772661'
+    elif num == 'b':
+        hashcode = '92eb5ffee6ae2fec3ad71c777531578f'
+    elif num == 'c':
+        hashcode = '4a8a08f09d37b73795649038408b5f33'
+    elif num == 'd':
+        hashcode = '8277e0910d750195b448797616e091ad'
+    elif num == 'e':
+        hashcode = 'e1671797c52e15f763380b45e841ec32'
+    elif num == 'f':
+        hashcode = '8fa14cdd754f91cc6554c9e71929cce7'
+    elif num == 'g':
+        hashcode = 'b2f5ff47436671b6e533d8dc3614845d'
+    elif num == 'h':
+        hashcode = '2510c39011c5be704182423e3a695e91'
+    elif num == 'i':
+        hashcode = '865c0c0b4ab0e063e5caa3387c1a8741'
+    elif num == 'j':
+        hashcode = '363b122c528f54df4a0446b6bab05515'
+    elif num == 'k':
+        hashcode = '8ce4b16b22b58894aa86c421e8759df3'
+    elif num == 'l':
+        hashcode = '2db95e8e1a9267b7a1188556b2013b33'
+    elif num == 'm':
+        hashcode = '6f8f57715090da2632453988d9a1501b'
+    elif num == 'n':
+        hashcode = '7b8b965ad4bca0e41ab51de7b31363a1'
+    elif num == 'o':
+        hashcode = 'd95679752134a2d9eb61dbd7b91c4bcc'
+    elif num == 'p':
+        hashcode = '83878c91171338902e0fe0fb97a8c47a'
+    elif num == 'q':
+        hashcode = '7694f4a66316e53c8cdd9d9954bd611d'
+    elif num == 'r':
+        hashcode = '4b43b0aee35624cd95b910189b3dc231'
+    elif num == 's':
+        hashcode = '03c7c0ace395d80182db07ae2c30f034'
+    elif num == 't':
+        hashcode = 'e358efa489f58062f10dd7316b65649e'
+    elif num == 'u':
+        hashcode = '7b774effe4a349c6dd82ad4f4f21d34c'
+    elif num == 'v':
+        hashcode = '9e3669d19b675bd57058fd4664205d2a'
+    elif num == 'w':
+        hashcode = 'f1290186a5d0b1ceab27f4e77c0c5d68'
+    elif num == 'x':
+        hashcode = '9dd4e461268c8034f5c8564e155c67a6'
+    elif num == 'y':
+        hashcode = '415290769594460e2e485922904f345d'
+    elif num == 'z':
+        hashcode = 'fbade9e36a3f36d3d676c1b808451dd7'
+    return hashcode
+
+
+###############################################################################
+# Log student entries to auto-graded questions                                #
+# - modified 20240120                                                         #
+###############################################################################       
+def dataLogger(questionStr, x, varNames, log):
+    if os.path.isfile('PHYS121_DataLogger.txt') == False:
+        with open('PHYS121_DataLogger.txt', 'a+') as f:
+            f.write('Date' + '\t' + 'Time' + '\t' + 'Question' + '\t' + 'Variable Name' + '\t' + 'Response' + '\t' + 'Type' + '\t' + 'Result' + '\n')
+    now = datetime.now()
+    corr = now - timedelta(hours = 8)
+
+    testString = log.lower().replace('\n','').replace(' ', '').replace('name_and_student_number_1', '')
+    results = []
+    for k in x:
+        results = results + ['passed']
+    if 'failed' in testString: 
+        splitList = testString.split('failed')
+        for j in range(len(varNames)):
+            for i in range(1, len(splitList), 2):
+                if varNames[j] in splitList[i]:
+                    results[j] = 'failed'
+    cnt = 0
+    for xi in x:
+        with open('PHYS121_DataLogger.txt', 'a+') as f:
+            if isinstance(xi, sym.Expr):
+                objectType = 'symbolic'
+            elif isinstance(xi, str):
+                objectType = 'string'
+            elif isinstance(xi, int):
+                objectType = 'integer'
+            elif isinstance(xi, float):
+                objectType = 'float'
+            elif isinstance(xi, complex):
+                objectType = 'complex'
+            elif isinstance(xi, list):
+                objectType = 'list'
+            elif isinstance(xi, np.ndarray):
+                objectType = 'numpy array'
+            elif isinstance(xi, sym.Expr):
+                objectType = 'sympy expression'
+            elif isinstance(xi, pd.DataFrame):
+                objectType = 'pandas dataframe'
+            elif isinstance(xi, tuple):
+                objectType = 'tuple'
+            elif isinstance(xi, set):
+                objectType = 'set'
+            elif isinstance(xi, np.ndarray) == False and isinstance(xi, list) == False and isinstance(xi, pd.DataFrame) == False and isinstance(xi, tuple) == False and isinstance(xi, set) == False and xi == ...:
+                objectType = 'ellipsis'
+            else:
+                objectType = 'unknown'
+            
+            dt_string = corr.strftime("%d/%m/%Y" + '\t' + "%H:%M:%S")
+            f.write(dt_string + '\t' + questionStr + '\t' + varNames[cnt] + '\t' + str(xi).replace('\n','') + '\t' + objectType + '\t' + results[cnt] + '\n')
+            cnt += 1
+    return
+
+###############################################################################
+# Log student entries to auto-graded questions                                #
+# - modified 20240120                                                         #
+###############################################################################       
+def graderCheck(x, varNames, check):
+    questionStr = str(check).split(' results')[0] # Get a string of the question name.
+    dataLogger(questionStr, x, varNames, str(check))
+    return check
