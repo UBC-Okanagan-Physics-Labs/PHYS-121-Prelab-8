@@ -461,7 +461,7 @@ def LinearFit(xData, yData, yErrors = [], xlabel = 'x-axis', ylabel = 'y-axis', 
 # - modified 20230221                                                         #
 ############################################################################### 
 # Start the 'PowerLaw' function.
-def PowerLaw(xData, yData, yErrors = [], xlabel = 'x-axis', ylabel = 'y-axis', xUnits = '', yUnits = ''):
+def PowerLaw(xData, yData, yErrors = [], xlabel = 'x-axis', ylabel = 'y-axis', xUnits = '', yUnits = '', start = (1, 2, 0)):
     # Check to see if the elements of dataArray are numpy arrays.  If they are, convert to lists
     Coeff = ''
     Power = ''
@@ -518,10 +518,10 @@ def PowerLaw(xData, yData, yErrors = [], xlabel = 'x-axis', ylabel = 'y-axis', x
         else:
             display(Markdown('$y = A\,(x/1$ ' + xUnits + '$)^N\,+ \,C$'))
         if len(yErrors) == 0: 
-            a_fit, cov = curve_fit(PowerFunc, xData, yData/ymax)
+            a_fit, cov = curve_fit(PowerFunc, xData, yData/ymax, p0 = start)
             display(Markdown('This is an **UNWEIGHTED** fit.'))
         else:
-            a_fit, cov = curve_fit(PowerFunc, xData, yData/ymax, sigma = yErrors/ymax)
+            a_fit, cov = curve_fit(PowerFunc, xData, yData/ymax, sigma = yErrors/ymax, p0 = start)
             display(Markdown('This is a **WEIGHTED** fit.'))
 
         Coeff = a_fit[0]*ymax
@@ -581,6 +581,11 @@ def PowerLaw(xData, yData, yErrors = [], xlabel = 'x-axis', ylabel = 'y-axis', x
         # Plot the best-fit line...
         xx = np.arange(xmin, xmax, (xmax-xmin)/5000)
         plt.plot(xx, Coeff*xx**Power + Offset, 'k-')
+
+        ax = plt.gca()
+        ax.relim()
+        ax.autoscale_view()
+        ax.set_aspect(1.0/ax.get_data_ratio(), adjustable='box')
 
         # Show the final plot.
         plt.show()
@@ -2090,3 +2095,99 @@ def Phase(xData, yData, yErrors = [], start = [220, 50], xlabel = 'x-axis', ylab
         # Show the final plot.
         plt.show()
     return w0_fit, gamma_fit, errw0, errgamma, fig
+
+
+
+
+
+###############################################################################
+# Report the time since last notebook save                                    #                                
+# - modified 20260115                                                         #
+############################################################################### 
+def save_time():
+    import time, pathlib, datetime
+
+    cwd = pathlib.Path().resolve()
+    ipynbs = list(cwd.glob("*.ipynb"))
+
+    lines = []
+    lines.append(f"Kernel working directory: {cwd}")
+    lines.append(
+        f"Log generated at: "
+        f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    )
+
+    if not ipynbs:
+        lines.append("⚠️ No notebook file found in this folder.")
+    else:
+        latest = max(ipynbs, key=lambda p: p.stat().st_mtime)
+        age = time.time() - latest.stat().st_mtime
+        mtime = datetime.datetime.fromtimestamp(
+            latest.stat().st_mtime
+        ).strftime("%Y-%m-%d %H:%M:%S")
+
+        lines.append(f"🕒 Time since last notebook save: {age:.1f} seconds")
+        lines.append(f"📓 Most recently saved notebook: {latest.name}")
+        lines.append(f"📅 That notebook's last-modified time: {mtime}")
+
+        if age > 10:
+            lines.append("")
+            lines.append(
+                "⚠️ If you made any changes since the last save, "
+                "please save the notebook (Ctrl/Cmd-S) and then rerun this export cell."
+            )
+
+    text = "\n".join(lines) + "\n"
+
+    # Print for the student
+    print(text)
+
+    # Write for grading/auditing
+    (cwd / "save_time.txt").write_text(text, encoding="utf-8")
+
+
+###############################################################################
+# Average like columns in a dataframe (Lab #4: RH)                            #                                
+# - modified 20260228                                                         #
+############################################################################### 
+def average(df):
+    # -------------------------------------------------
+    # 1. Identify column names
+    # -------------------------------------------------
+    # Assuming:
+    #   Column 0 = something else
+    #   Column 1 = Diameter
+    #   Column 2 = RH
+    # If not, print(df.columns) and adjust accordingly.
+
+    diameter_col = df.columns[1]
+    rh_col = df.columns[2]
+
+    # -------------------------------------------------
+    # 2. Group by diameter
+    # -------------------------------------------------
+    grouped = df.groupby(diameter_col)
+
+    # -------------------------------------------------
+    # 3. Compute statistics
+    # -------------------------------------------------
+    summary = grouped[rh_col].agg(
+        RH='mean',
+        std_RH='std',
+        count='count'
+    ).reset_index()
+
+    # -------------------------------------------------
+    # 4. Compute standard error
+    # -------------------------------------------------
+    summary['RH_uncertainty'] = summary['std_RH'] / np.sqrt(summary['count'])
+
+    # -------------------------------------------------
+    # 5. Keep only requested columns
+    # -------------------------------------------------
+    result = summary[[diameter_col, 'RH', 'RH_uncertainty', 'count']]
+
+    # Optional: sort by diameter
+    result = result.sort_values(by=diameter_col)
+
+    return result
